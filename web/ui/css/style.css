@@ -1,0 +1,172 @@
+/* styles.css */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; */ /* Remove this if you want full-width header/footer */
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px 40px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    margin: 30px auto 20px auto; /* top | left & right | bottom */
+    max-width: 400px; 
+    text-align: center; /* Centers inline content within the container */
+}
+
+h1, h2 {
+    color: #0056b3;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    text-align: left;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: calc(100% - 22px); /* Adjust for padding and border */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button[type="submit"] {
+    background-color: #0056b3;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover {
+    background-color: #004494;
+}
+
+#message {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+p {
+    margin-top: 15px;
+}
+
+a {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Home page specific links */
+.home-links {
+    margin-top: 20px;
+}
+
+.home-links a {
+    display: inline-block;
+    margin: 0 10px;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1.1em;
+}
+
+.home-links a:hover {
+    background-color: #0056b3;
+    text-decoration: none;
+}
+
+/* Dashboard Header Navigation Styles */
+header {
+    background-color: #0056b3;
+    color: white;
+    padding: 10px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+header nav {
+    display: flex;
+    justify-content: space-between; /* Pushes logo to left and nav links to right */
+    align-items: center;
+    max-width: 1200px; /* Optional: constrain width of nav content */
+    margin: 0 auto; /* Center nav content if max-width is set */
+}
+
+header nav .logo {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+header nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex; /* Arrange li elements in a row */
+}
+
+header nav ul li {
+    margin-left: 20px; /* Spacing between nav items */
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1em;
+}
+
+header nav ul li a:hover,
+header nav ul li a:focus {
+    text-decoration: underline;
+}
+
+/* Adjustments for main content area when header is present */
+body > main { /* Target main directly under body if header is fixed or takes space */
+    padding-top: 0; /* Reset padding if any was added for a fixed header previously */
+    width: 100%;
+}
+
+/* Footer Styles */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    width: 100%;
+    margin-top: auto; /* Pushes footer to the bottom if content is short */
+}
+
+/* General iframe styling for dashboard content */
+iframe[name="dashboard_content"] {
+    width: 100%;
+    height: calc(100vh - 60px - 40px); /* Adjust based on actual header and footer height */
+    border: none;
+    display: block; /* Remove extra space below iframe */
+}
+
+/* Ensure body takes full height for flex to work with footer */
+html, body {
+    height: 100%;
+}

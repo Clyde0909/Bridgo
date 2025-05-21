@@ -1,0 +1,58 @@
+Copyright 2025 Hayoung Kim
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+--------------------------------------------------------------------------------
+ADDITIONAL TERMS AND CONDITIONS
+--------------------------------------------------------------------------------
+
+Notwithstanding any other provision of this License, the following additional
+terms and conditions apply to the Work:
+
+1.  **Restriction on Use for Paid Cloud Services (SaaS)**: 
+    The Work, and any Derivative Works thereof, may not be used to provide, 
+    host, or otherwise offer a paid software-as-a-service (SaaS) or any 
+    similar cloud-based service where the primary offering to the end-user 
+    is substantially the same as the Work or its Derivative Works, and for 
+    which a fee is charged to the end-user for access or use of such service.
+
+    For clarity:
+    - This restriction applies to services where the Work or Derivative Works 
+      form the core functionality being sold or offered on a subscription or 
+      pay-per-use basis.
+    - This restriction does NOT prevent You from using the Work internally to 
+      support Your own operations, including Your own paid services, as long 
+      as the Work itself is not the direct product being sold as a SaaS offering.
+    - This restriction does NOT prevent You from distributing the Work or 
+      Derivative Works in accordance with the other terms of the Apache License 2.0 
+      (e.g., for on-premise deployments by end-users, or for inclusion in 
+      larger projects that are not themselves primarily SaaS offerings of the Work).
+
+These additional terms are intended to prevent the direct commercialization of the
+Work as a standalone, paid cloud service, while still allowing for broad use and
+distribution as per the Apache License 2.0.
+
+--------------------------------------------------------------------------------
+THIRD-PARTY LICENSES AND COMPONENTS
+--------------------------------------------------------------------------------
+
+This software incorporates the following third-party components:
+
+1.  **DuckDB**
+    *   This software uses DuckDB.
+    *   DuckDB is licensed under the MIT License. A copy of the MIT License can be found at [https://github.com/duckdb/duckdb/blob/master/LICENSE.txt](https://github.com/duckdb/duckdb/blob/master/LICENSE.txt).
+    *   Users of this software must also comply with the terms of the MIT License with respect to the DuckDB components.
+    *   Copyright (c) 2018-2024 Stichting DuckDB Foundation
+    *   Website: [https://duckdb.org](https://duckdb.org)
+
+(You should ensure to include the actual DuckDB MIT license text in your distribution if required, or ensure this link remains valid and accessible.)

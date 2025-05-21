@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Bridgo</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Bridgo</div>
+            <ul>
+                <li><a href="/dashboard_home" target="dashboard_content">홈</a></li>
+                <li><a href="/db_connections" target="dashboard_content">DB연결</a></li>
+                <li><a href="/settings" target="dashboard_content">설정</a></li>
+                <li><a href="#" id="logoutButton">로그아웃</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <iframe name="dashboard_content" src="/dashboard_home" style="width:100%; height: calc(100vh - 70px); border:none;"></iframe>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Bridgo. All rights reserved.</p>
+    </footer>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
