@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Views - Bridgo</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=4">
+</head>
+<body>
+    <div class="container">
+        <h1>Virtual Views</h1>
+        <p>Create virtual views from your saved data sources.</p>
+
+        <h2>Saved Data Sources</h2>
+        <div id="dataSourcesArea">
+            <p id="dataSourcesLoadingStatus">Loading saved data sources...</p>
+            <div id="dataSourcesList">
+                <!-- Data sources will be populated here by JavaScript -->
+            </div>
+        </div>
+
+        <div id="virtualViewCreationArea" style="margin-top: 30px; display: none;">
+            <h2>Create Virtual View</h2>
+            <div id="selectedDataSourceInfo" style="margin-bottom: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 5px;">
+                <!-- Selected data source info will be shown here -->
+            </div>
+            
+            <h3>Select Tables and Columns:</h3>
+            <div id="schemaSelectionArea" style="margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; max-height: 400px; overflow-y: auto;">
+                <!-- Schema selection will be populated here by JavaScript -->
+            </div>
+
+            <form id="virtualViewForm">
+                <div>
+                    <label for="virtualViewName">Virtual View Name:</label>
+                    <input type="text" id="virtualViewName" name="virtualViewName" required>
+                </div>
+                <div>
+                    <label for="virtualViewDescription">Description (Optional):</label>
+                    <textarea id="virtualViewDescription" name="virtualViewDescription" rows="3"></textarea>
+                </div>
+                <button type="submit">Create Virtual View</button>
+            </form>
+            <div id="virtualViewMessage" class="message" style="margin-top: 10px;"></div>
+        </div>
+
+        <h2>Existing Virtual Views</h2>
+        <div id="existingVirtualViewsArea">
+            <p id="virtualViewsLoadingStatus">Loading existing virtual views...</p>
+            <div id="virtualViewsList">
+                <!-- Virtual views will be populated here by JavaScript -->
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/utils.js?v=4"></script>
+    <script src="/static/js/auth.js?v=4"></script>
+    <script src="/static/js/virtualviews.js?v=4"></script>
+    <script src="/static/js/app.js?v=4"></script> 
+</body>
+</html>

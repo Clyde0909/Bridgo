@@ -19,10 +19,6 @@ const dbFileName = "bridgo_meta.db"
 func InitDB(basePath string) (*sql.DB, error) {
 	dbPath := filepath.Join(basePath, dbFileName)
 
-	// Ensure the directory for the database file exists (though for root path, it's less critical)
-	// For a real application, dbPath might be in a subdirectory like 'data/'
-	// os.MkdirAll(filepath.Dir(dbPath), os.ModePerm)
-
 	db, err := sql.Open("duckdb", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -235,6 +231,5 @@ func getProjectRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// This might need adjustment if the executable is run from a different depth
 	return wd, nil
 }

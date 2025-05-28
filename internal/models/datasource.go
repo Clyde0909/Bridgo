@@ -35,5 +35,6 @@ type DataSourceSchema struct {
 	ColumnName   string         `json:"column_name"`
 	ColumnType   string         `json:"column_type"`
 	IsNullable   sql.NullBool   `json:"is_nullable"`
+	IsPrimaryKey sql.NullBool   `json:"is_primary_key"` // Added to store PK information
 	RetrievedAt  time.Time      `json:"retrieved_at"`
 }

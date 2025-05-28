@@ -11,6 +11,8 @@ import (
 	"Bridgo/internal/metadata"
 	"Bridgo/internal/server"
 	"Bridgo/internal/web"
+
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 func main() {
@@ -46,6 +48,7 @@ func main() {
 		"/dashboard",      // Main dashboard page
 		"/dashboard_home", // Dashboard iframe content
 		"/db_connections", // Dashboard iframe content
+		"/virtual_views",  // Dashboard iframe content
 		"/settings",       // Dashboard iframe content
 		"/favicon.ico",    // Browser favicon request
 	}

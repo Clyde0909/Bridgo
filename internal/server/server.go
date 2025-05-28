@@ -11,15 +11,15 @@ import (
 // It was formerly named Server, renamed to App for clarity as it now manages services.
 type App struct {
 	UserService *users.Service
-	CoreService *core.Service
+	CoreService *core.CoreService
 	// Add other services here as the application grows
 }
 
 // NewApp creates and returns a new App instance, initializing all its services.
 // It was formerly NewServer, renamed to NewApp.
 func NewApp(db *sql.DB) *App { // Modified to accept *sql.DB
-	userService := users.NewService(db) // Pass db to users.NewService
-	coreService := core.NewService(db)  // Pass db to core.NewService
+	userService := users.NewService(db)    // Pass db to users.NewService
+	coreService := core.NewCoreService(db) // Pass db to core.NewCoreService
 
 	return &App{
 		UserService: userService,

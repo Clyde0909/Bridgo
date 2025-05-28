@@ -8,5 +8,5 @@ This project is written in Go and uses DuckDB as a metadata store.
 - **Web Interface**: A web-based interface for easy access and management.
 
 ## NOTE
-For now, this project is in early development stage.
+For now, this project is in early development stage.  
 for debug purpose id:admin pwd:admin will be automatically created.

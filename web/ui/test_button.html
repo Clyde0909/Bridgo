@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test - Bridgo</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Button Test Page</h1>
+        <p>This page tests if the button text is displayed correctly without any JavaScript interference.</p>
+
+        <form id="dbConnectionForm">
+            <div>
+                <label for="dbType">Database Type:</label>
+                <select id="dbType" name="dbType" required>
+                    <option value="">Select...</option>
+                    <option value="postgresql">PostgreSQL</option>
+                    <option value="mysql">MySQL</option>
+                </select>
+            </div>
+            <div>
+                <label for="sourceName">Source Name:</label>
+                <input type="text" id="sourceName" name="sourceName" required placeholder="e.g., My Production Postgres">
+            </div>
+            <button type="submit">Test Connection and Fetch Schema</button>
+        </form>
+
+        <div id="connectionMessage" class="message" style="margin-top: 20px;"></div>
+        
+        <h2>Test Results:</h2>
+        <p id="testResults">JavaScript will update this area if loaded properly.</p>
+    </div>
+    
+    <!-- Minimal JavaScript for testing -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const form = document.getElementById('dbConnectionForm');
+            const button = form ? form.querySelector('button[type="submit"]') : null;
+            const results = document.getElementById('testResults');
+            
+            if (button) {
+                results.innerHTML = `
+                    <strong>Button found!</strong><br>
+                    Button text: "${button.textContent}"<br>
+                    Button type: "${button.type}"<br>
+                    Form ID: "${form.id}"
+                `;
+                
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    results.innerHTML += '<br><strong>Form submitted successfully!</strong>';
+                });
+            } else {
+                results.innerHTML = '<strong style="color: red;">Button not found!</strong>';
+            }
+        });
+    </script>
+</body>
+</html>

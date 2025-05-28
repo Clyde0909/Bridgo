@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>DB Connections - Bridgo</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=3">
 </head>
 <body>
     <div class="container">
@@ -45,7 +48,7 @@
                 <label for="dbName">Database Name:</label>
                 <input type="text" id="dbName" name="dbName" required>
             </div>
-            <button type="submit">Connect and Fetch Schema</button>
+            <button type="submit">Test Connection and Fetch Schema</button>
         </form>
 
         <div id="connectionMessage" class="message" style="margin-top: 20px;"></div>
@@ -54,27 +57,20 @@
         <div id="schemaDisplayArea">
             <p id="schemaOutputLoadingStatus">Schema information will be displayed here.</p>
             <div id="selectableSchemaContainer" style="margin-top: 10px; border: 1px solid #ccc; padding: 10px; max-height: 400px; overflow-y: auto;">
-                <!-- Schema will be populated here by JavaScript -->
             </div>
         </div>
 
-        <div id="virtualViewCreationArea" style="margin-top: 30px; display: none;">
-            <h2>Create Virtual View</h2>
-            <form id="virtualViewForm">
-                <div>
-                    <label for="virtualViewName">Virtual View Name:</label>
-                    <input type="text" id="virtualViewName" name="virtualViewName" required>
-                </div>
-                <div>
-                    <label for="virtualViewDescription">Description (Optional):</label>
-                    <textarea id="virtualViewDescription" name="virtualViewDescription" rows="3"></textarea>
-                </div>
-                <button type="submit">Create Virtual View</button>
-            </form>
-            <div id="virtualViewMessage" class="message" style="margin-top: 10px;"></div>
+        <div id="saveDataSourceArea" style="margin-top: 30px; display: none;">
+            <h2>Save Data Source</h2>
+            <p>Connection test successful! You can now save this data source to your metadata.</p>
+            <button id="saveDataSourceBtn" type="button">Save Data Source</button>
+            <div id="saveDataSourceMessage" class="message" style="margin-top: 10px;"></div>
         </div>
 
     </div>
-    <script src="/static/js/app.js"></script> 
+    <script src="/static/js/utils.js?v=3"></script>
+    <script src="/static/js/auth.js?v=3"></script>
+    <script src="/static/js/datasources.js?v=3"></script>
+    <script src="/static/js/app.js?v=3"></script> 
 </body>
 </html>
