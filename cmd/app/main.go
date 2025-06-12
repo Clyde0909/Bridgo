@@ -12,7 +12,8 @@ import (
 	"Bridgo/internal/server"
 	"Bridgo/internal/web"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/go-sql-driver/mysql" // MySQL driver
+	_ "github.com/lib/pq"              // PostgreSQL driver
 )
 
 func main() {

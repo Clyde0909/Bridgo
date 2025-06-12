@@ -71,7 +71,7 @@ func (dss *DataSourceService) GetDataSourceSchema(data_source_id string, user_id
 	}
 
 	query := `
-        SELECT id, data_source_id, schema_name, table_name, column_name, column_type, is_nullable, retrieved_at
+        SELECT id, data_source_id, schema_name, table_name, column_name, column_type, is_nullable, is_primary_key, retrieved_at
         FROM data_source_schemas 
         WHERE data_source_id = ? 
         ORDER BY table_name, column_name
@@ -86,7 +86,7 @@ func (dss *DataSourceService) GetDataSourceSchema(data_source_id string, user_id
 	var schemas []models.DataSourceSchema
 	for rows.Next() {
 		var schema models.DataSourceSchema
-		err = rows.Scan(&schema.ID, &schema.DataSourceID, &schema.SchemaName, &schema.TableName, &schema.ColumnName, &schema.ColumnType, &schema.IsNullable, &schema.RetrievedAt)
+		err = rows.Scan(&schema.ID, &schema.DataSourceID, &schema.SchemaName, &schema.TableName, &schema.ColumnName, &schema.ColumnType, &schema.IsNullable, &schema.IsPrimaryKey, &schema.RetrievedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan schema: %w", err)
 		}

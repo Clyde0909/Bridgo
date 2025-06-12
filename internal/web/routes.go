@@ -21,9 +21,31 @@ func (h *HandlerDependencies) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/db/save-datasource", h.dbSaveDataSourceAPIHandler)
 	mux.HandleFunc("/api/datasources", h.getUserDataSourcesAPIHandler)
 	mux.HandleFunc("/api/datasources/schema", h.getDataSourceSchemaAPIHandler)
-	mux.HandleFunc("/api/virtual-views", h.getUserVirtualViewsAPIHandler)
+	mux.HandleFunc("/api/virtual-views", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			h.getUserVirtualViewsAPIHandler(w, r)
+		} else if r.Method == http.MethodPost {
+			h.createVirtualViewAPIHandler(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/virtual-views/schema", h.getVirtualViewSchemaAPIHandler)
+	mux.HandleFunc("/api/virtual-views/sample-data", h.getVirtualViewSampleDataAPIHandler)
+
+	// Virtual Base Views API
+	mux.HandleFunc("/api/virtual-base-views", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			h.getUserVirtualBaseViewsAPIHandler(w, r)
+		} else if r.Method == http.MethodPost {
+			h.createVirtualBaseViewAPIHandler(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/virtual-base-views/schema", h.getVirtualBaseViewSchemaAPIHandler)
+	mux.HandleFunc("/api/virtual-base-views/sample-data", h.getVirtualBaseViewSampleDataAPIHandler)
 	mux.HandleFunc("/api/db/connect-and-fetch-schema", h.dbConnectAndFetchSchemaAPIHandler)
-	mux.HandleFunc("/api/virtual-views/create", h.createVirtualViewAPIHandler)
 
 	// Static files (CSS, JS, images etc.) from web/ui directory served under /static/ path
 	// e.g., /static/css/style.css will serve web/ui/css/style.css

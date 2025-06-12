@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS data_source_schemas (
     column_name TEXT NOT NULL,
     column_type TEXT NOT NULL,
     is_nullable BOOLEAN,
+    is_primary_key BOOLEAN,
     retrieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (data_source_id) REFERENCES data_sources(id)
 );
@@ -180,6 +181,22 @@ CREATE TABLE IF NOT EXISTS virtual_views (
     last_accessed_at TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE (user_id, name) -- A user cannot have two virtual views with the same name
+);
+
+CREATE TABLE IF NOT EXISTS virtual_base_views (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    data_source_id TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    selected_columns TEXT NOT NULL, -- JSON array of column IDs
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_accessed_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (data_source_id) REFERENCES data_sources(id),
+    UNIQUE (user_id, name) -- A user cannot have two virtual base views with the same name
 );
 	`
 

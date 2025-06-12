@@ -1,4 +1,4 @@
-// virtualviews.js - Virtual view management functionality
+// virtualviews.js - Virtual BaseView management functionality
 
 class VirtualViewManager {
     constructor() {
@@ -11,6 +11,9 @@ class VirtualViewManager {
         this.virtualViewsList = null;
         this.schemaSelectionArea = null;
         this.selectedDataSourceInfo = null;
+        this.selectedDataSourceId = null;
+        this.selectedTableName = null;
+        this.selectedColumns = [];
     }
 
     init() {
@@ -28,13 +31,13 @@ class VirtualViewManager {
 
         if (window.location.pathname.includes('/virtual_views')) {
             this.loadUserDataSources();
-            this.loadUserVirtualViews();
+            this.loadUserVirtualBaseViews();
         }
     }
 
     setupEventListeners() {
         if (this.virtualViewForm) {
-            this.virtualViewForm.addEventListener('submit', (e) => this.handleCreateVirtualView(e));
+            this.virtualViewForm.addEventListener('submit', (e) => this.handleCreateVirtualBaseView(e));
         }
     }
 
@@ -58,7 +61,7 @@ class VirtualViewManager {
             if (response.ok) {
                 this.displayDataSources(result.datasources);
                 const message = result.datasources.length > 0 ? 
-                    'Click on a data source to create a virtual view:' : 
+                    'Click on a data source to create a Virtual BaseView:' : 
                     'No saved data sources found. Please add some data sources first.';
                 displayMessage(this.dataSourcesLoadingStatus, message, 'info');
             } else {
@@ -101,10 +104,15 @@ class VirtualViewManager {
     }
 
     async selectDataSource(dataSource) {
+        this.selectedDataSourceId = dataSource.id;
+        this.selectedTableName = null;
+        this.selectedColumns = [];
+        
         // Update UI to show selected data source
         this.selectedDataSourceInfo.innerHTML = `
             <h4>Selected Data Source: ${dataSource.source_name}</h4>
             <p><strong>Type:</strong> ${dataSource.db_type} | <strong>Database:</strong> ${dataSource.database_name.String || 'N/A'}</p>
+            <p style="color: #666; font-style: italic;">Select a table below to create a Virtual BaseView</p>
         `;
 
         // Load schema for this data source
@@ -163,148 +171,167 @@ class VirtualViewManager {
             return acc;
         }, {});
 
+        // Create instructions
+        const instructionsDiv = document.createElement('div');
+        instructionsDiv.innerHTML = `
+            <h4>Select a Table for Virtual BaseView</h4>
+            <p style="color: #666;">Each Virtual BaseView is based on a single table. Click on a table below to select it and choose columns:</p>
+        `;
+        this.schemaSelectionArea.appendChild(instructionsDiv);
+
+        // Create table selection cards
         for (const tableName in tables) {
-            const tableSection = createStyledDiv({ 
-                marginBottom: '20px',
-                border: '1px solid #ddd',
-                borderRadius: '5px',
-                overflow: 'hidden'
+            const tableCard = createStyledDiv({ 
+                marginBottom: '15px',
+                border: '2px solid #ddd',
+                borderRadius: '8px',
+                padding: '15px',
+                cursor: 'pointer',
+                backgroundColor: '#f9f9f9',
+                transition: 'all 0.3s ease'
             });
-            
-            // Table header with checkbox for selecting entire table
-            const tableHeaderDiv = document.createElement('div');
-            tableHeaderDiv.className = 'table-header-with-checkbox';
-            
-            const tableCheckbox = document.createElement('input');
-            tableCheckbox.type = 'checkbox';
-            tableCheckbox.id = `table_${tableName.replace(/[^a-zA-Z0-9]/g, '_')}`;
-            tableCheckbox.addEventListener('change', () => {
-                const columnCheckboxes = tableSection.querySelectorAll('.column-checkbox');
-                columnCheckboxes.forEach(cb => cb.checked = tableCheckbox.checked);
-            });
-            
-            const tableLabel = document.createElement('label');
-            tableLabel.htmlFor = tableCheckbox.id;
-            tableLabel.textContent = `Table: ${tableName}`;
-            
-            tableHeaderDiv.appendChild(tableCheckbox);
-            tableHeaderDiv.appendChild(tableLabel);
-            tableSection.appendChild(tableHeaderDiv);
 
-            // Create table
-            const table = document.createElement('table');
-            table.className = 'schema-table';
+            tableCard.innerHTML = `
+                <h5 style="margin: 0 0 10px 0; color: #333;">📋 ${tableName}</h5>
+                <p style="margin: 0; color: #666;">${tables[tableName].length} columns available</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; color: #888;">Click to select this table and choose columns</p>
+            `;
 
-            // Create table header
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
+            tableCard.addEventListener('click', () => this.selectTableForBaseView(tableName, tables[tableName]));
             
-            const headers = ['Select', 'Column Name', 'Column Type', 'PK', 'Allow Null'];
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
-            });
-            
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            // Create table body
-            const tbody = document.createElement('tbody');
-            
-            tables[tableName].forEach((column, index) => {
-                const row = document.createElement('tr');
-                
-                // Select checkbox
-                const selectCell = document.createElement('td');
-                selectCell.className = 'select-cell';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `schema_${column.id}`;
-                checkbox.value = column.id;
-                checkbox.name = 'selectedColumns';
-                checkbox.className = 'column-checkbox';
-                checkbox.addEventListener('change', () => {
-                    // Update table checkbox state based on column selections
-                    const allColumnCheckboxes = tableSection.querySelectorAll('.column-checkbox');
-                    const checkedColumnCheckboxes = tableSection.querySelectorAll('.column-checkbox:checked');
-                    
-                    if (checkedColumnCheckboxes.length === 0) {
-                        tableCheckbox.checked = false;
-                        tableCheckbox.indeterminate = false;
-                    } else if (checkedColumnCheckboxes.length === allColumnCheckboxes.length) {
-                        tableCheckbox.checked = true;
-                        tableCheckbox.indeterminate = false;
-                    } else {
-                        tableCheckbox.checked = false;
-                        tableCheckbox.indeterminate = true;
-                    }
-                });
-                
-                selectCell.appendChild(checkbox);
-                row.appendChild(selectCell);
-                
-                // Column Name
-                const nameCell = document.createElement('td');
-                nameCell.className = 'column-name';
-                nameCell.textContent = column.column_name || 'N/A';
-                row.appendChild(nameCell);
-                
-                // Column Type
-                const typeCell = document.createElement('td');
-                typeCell.className = 'column-type';
-                typeCell.textContent = column.column_type || 'N/A';
-                row.appendChild(typeCell);
-                
-                // Primary Key
-                const pkCell = document.createElement('td');
-                const isPrimaryKey = column.is_primary_key || column.primary_key || false;
-                pkCell.className = `pk-cell ${isPrimaryKey ? 'pk-yes' : 'pk-no'}`;
-                pkCell.textContent = isPrimaryKey ? '✓' : '✗';
-                row.appendChild(pkCell);
-                
-                // Allow Null
-                const nullCell = document.createElement('td');
-                const allowsNull = column.is_nullable || column.nullable || column.allow_null;
-                let nullValue = '✗';
-                let nullClass = 'null-no';
-                if (allowsNull === true || allowsNull === 'YES' || allowsNull === 'Y' || allowsNull === 1) {
-                    nullValue = '✓';
-                    nullClass = 'null-yes';
+            // Hover effects
+            tableCard.addEventListener('mouseenter', () => {
+                if (this.selectedTableName !== tableName) {
+                    tableCard.style.backgroundColor = '#e8f4fd';
+                    tableCard.style.borderColor = '#007bff';
                 }
-                nullCell.className = `null-cell ${nullClass}`;
-                nullCell.textContent = nullValue;
-                row.appendChild(nullCell);
-                
-                tbody.appendChild(row);
             });
-            
-            table.appendChild(tbody);
-            tableSection.appendChild(table);
-            this.schemaSelectionArea.appendChild(tableSection);
+            tableCard.addEventListener('mouseleave', () => {
+                if (this.selectedTableName !== tableName) {
+                    tableCard.style.backgroundColor = '#f9f9f9';
+                    tableCard.style.borderColor = '#ddd';
+                }
+            });
+
+            this.schemaSelectionArea.appendChild(tableCard);
         }
     }
 
-    async handleCreateVirtualView(e) {
+    selectTableForBaseView(tableName, columns) {
+        this.selectedTableName = tableName;
+        this.selectedColumns = [];
+
+        // Update visual feedback for selected table
+        const tableCards = this.schemaSelectionArea.querySelectorAll('div[style*="border: 2px solid"]');
+        tableCards.forEach(card => {
+            if (card.textContent.includes(tableName)) {
+                card.style.backgroundColor = '#d4edda';
+                card.style.borderColor = '#28a745';
+            } else {
+                card.style.backgroundColor = '#f9f9f9';
+                card.style.borderColor = '#ddd';
+            }
+        });
+
+        // Display column selection for this table
+        this.displayColumnSelection(tableName, columns);
+    }
+
+    displayColumnSelection(tableName, columns) {
+        // Create or update column selection area
+        let columnSelectionArea = document.getElementById('columnSelectionArea');
+        if (!columnSelectionArea) {
+            columnSelectionArea = document.createElement('div');
+            columnSelectionArea.id = 'columnSelectionArea';
+            this.schemaSelectionArea.appendChild(columnSelectionArea);
+        }
+
+        columnSelectionArea.innerHTML = `
+            <div style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8f9fa;">
+                <h5>Select Columns for "${tableName}"</h5>
+                <p style="color: #666; margin-bottom: 15px;">Choose which columns to include in your Virtual BaseView:</p>
+                <div id="columnCheckboxArea"></div>
+                <div style="margin-top: 15px;">
+                    <button type="button" id="selectAllColumns" class="btn btn-sm btn-outline-primary">Select All</button>
+                    <button type="button" id="clearAllColumns" class="btn btn-sm btn-outline-secondary" style="margin-left: 5px;">Clear All</button>
+                </div>
+            </div>
+        `;
+
+        const columnCheckboxArea = document.getElementById('columnCheckboxArea');
+        
+        // Create column checkboxes
+        columns.forEach(column => {
+            const columnDiv = document.createElement('div');
+            columnDiv.style.cssText = 'margin-bottom: 8px; padding: 8px; border: 1px solid #e9ecef; border-radius: 4px; background-color: white;';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `col_${column.column_name}`;
+            checkbox.value = column.column_name;
+            checkbox.addEventListener('change', () => this.updateSelectedColumns());
+            
+            const isPrimaryKey = column.is_primary_key;
+            const allowsNull = column.is_nullable;
+            
+            columnDiv.innerHTML = `
+                <label for="${checkbox.id}" style="display: flex; align-items: center; margin: 0; cursor: pointer;">
+                    <input type="checkbox" id="${checkbox.id}" value="${column.column_name}" style="margin-right: 10px;">
+                    <div style="flex: 1;">
+                        <strong>${column.column_name}</strong>
+                        <span style="color: #666; margin-left: 10px;">${column.column_type}</span>
+                        ${isPrimaryKey ? '<span style="background: #28a745; color: white; font-size: 10px; padding: 2px 4px; border-radius: 2px; margin-left: 5px;">PK</span>' : ''}
+                        ${!allowsNull ? '<span style="background: #dc3545; color: white; font-size: 10px; padding: 2px 4px; border-radius: 2px; margin-left: 5px;">NOT NULL</span>' : ''}
+                    </div>
+                </label>
+            `;
+            
+            columnCheckboxArea.appendChild(columnDiv);
+        });
+
+        // Setup select all / clear all buttons
+        document.getElementById('selectAllColumns').addEventListener('click', () => {
+            const checkboxes = columnCheckboxArea.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            this.updateSelectedColumns();
+        });
+
+        document.getElementById('clearAllColumns').addEventListener('click', () => {
+            const checkboxes = columnCheckboxArea.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            this.updateSelectedColumns();
+        });
+    }
+
+    updateSelectedColumns() {
+        const checkboxes = document.querySelectorAll('#columnCheckboxArea input[type="checkbox"]:checked');
+        this.selectedColumns = Array.from(checkboxes).map(cb => cb.value);
+        console.log('Selected columns:', this.selectedColumns);
+    }
+
+    async handleCreateVirtualBaseView(e) {
         e.preventDefault();
         displayMessage(this.virtualViewMessage, '');
 
         const viewName = this.virtualViewForm.virtualViewName.value;
         const description = this.virtualViewForm.virtualViewDescription.value;
-        const selectedColumnsCheckboxes = document.querySelectorAll('input[name="selectedColumns"]:checked');
-        
-        const selectedDataSourceSchemaIDs = [];
-        selectedColumnsCheckboxes.forEach(checkbox => {
-            selectedDataSourceSchemaIDs.push(parseInt(checkbox.value, 10));
-        });
 
         if (!viewName) {
             displayMessage(this.virtualViewMessage, 'Error: Please enter a view name.', 'error');
             return;
         }
         
-        if (selectedDataSourceSchemaIDs.length === 0) {
+        if (!this.selectedDataSourceId) {
+            displayMessage(this.virtualViewMessage, 'Error: Please select a data source.', 'error');
+            return;
+        }
+
+        if (!this.selectedTableName) {
+            displayMessage(this.virtualViewMessage, 'Error: Please select a table.', 'error');
+            return;
+        }
+
+        if (this.selectedColumns.length === 0) {
             displayMessage(this.virtualViewMessage, 'Error: Please select at least one column.', 'error');
             return;
         }
@@ -316,7 +343,7 @@ class VirtualViewManager {
         }
 
         try {
-            const response = await fetch('/api/virtual-views', {
+            const response = await fetch('/api/virtual-base-views', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -325,17 +352,32 @@ class VirtualViewManager {
                 body: JSON.stringify({
                     name: viewName,
                     description: description,
-                    selectedDataSourceSchemaIDs: selectedDataSourceSchemaIDs
+                    data_source_id: this.selectedDataSourceId,
+                    table_name: this.selectedTableName,
+                    selected_columns: this.selectedColumns
                 }),
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                displayMessage(this.virtualViewMessage, 'Virtual view created successfully!', 'success');
+                displayMessage(this.virtualViewMessage, 'Virtual BaseView created successfully!', 'success');
                 this.virtualViewForm.reset();
-                // Reload virtual views list
-                this.loadUserVirtualViews();
+                
+                // Clear selection state
+                this.selectedDataSourceId = null;
+                this.selectedTableName = null;
+                this.selectedColumns = [];
+                
+                // Clear UI
+                clearElement(this.schemaSelectionArea);
+                if (this.virtualViewCreationArea) {
+                    this.virtualViewCreationArea.style.display = 'none';
+                }
+                clearElement(this.selectedDataSourceInfo);
+                
+                // Reload virtual base views list
+                this.loadUserVirtualBaseViews();
             } else {
                 displayMessage(this.virtualViewMessage, `Error: ${result.message || response.statusText}`, 'error');
             }
@@ -344,7 +386,7 @@ class VirtualViewManager {
         }
     }
 
-    async loadUserVirtualViews() {
+    async loadUserVirtualBaseViews() {
         try {
             const token = getAuthToken();
             if (!token) {
@@ -352,7 +394,7 @@ class VirtualViewManager {
                 return;
             }
 
-            const response = await fetch('/api/virtual-views', {
+            const response = await fetch('/api/virtual-base-views', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -362,51 +404,262 @@ class VirtualViewManager {
             const result = await response.json();
 
             if (response.ok) {
-                this.displayVirtualViews(result.virtualviews);
-                const message = result.virtualviews.length > 0 ? 
-                    'Your virtual views:' : 
-                    'No virtual views found.';
+                this.displayVirtualBaseViews(result.virtual_base_views || []);
+                const message = (result.virtual_base_views && result.virtual_base_views.length > 0) ? 
+                    'Your Virtual BaseViews:' : 
+                    'No Virtual BaseViews found.';
                 displayMessage(this.virtualViewsLoadingStatus, message, 'info');
             } else {
                 displayMessage(this.virtualViewsLoadingStatus, `Error: ${result.message || response.statusText}`, 'error');
             }
         } catch (error) {
-            displayMessage(this.virtualViewsLoadingStatus, `Error loading virtual views: ${error.message}`, 'error');
+            displayMessage(this.virtualViewsLoadingStatus, `Error loading Virtual BaseViews: ${error.message}`, 'error');
         }
     }
 
-    displayVirtualViews(virtualViews) {
+    displayVirtualBaseViews(virtualBaseViews) {
         clearElement(this.virtualViewsList);
         
-        if (!virtualViews || virtualViews.length === 0) {
-            this.virtualViewsList.innerHTML = '<p>No virtual views available.</p>';
+        if (!virtualBaseViews || virtualBaseViews.length === 0) {
+            this.virtualViewsList.innerHTML = '<p>No Virtual BaseViews available.</p>';
             return;
         }
 
-        virtualViews.forEach(vv => {
-            const vvDiv = createStyledDiv({
+        virtualBaseViews.forEach(vbv => {
+            const vbvDiv = createStyledDiv({
                 border: '1px solid #ccc',
                 margin: '10px 0',
                 padding: '10px',
                 borderRadius: '5px',
-                backgroundColor: '#f0f8ff'
+                backgroundColor: '#f0f8ff',
+                cursor: 'pointer'
             });
 
-            const definition = JSON.parse(vv.definition);
+            const selectedColumns = vbv.selected_columns ? JSON.parse(vbv.selected_columns) : [];
             
-            vvDiv.innerHTML = `
-                <h4>${vv.name}</h4>
-                <p><strong>Description:</strong> ${vv.description || 'No description'}</p>
-                <p><strong>Tables:</strong> ${definition.selected_tables ? definition.selected_tables.join(', ') : 'N/A'}</p>
-                <p><strong>Columns:</strong> ${definition.selected_columns ? definition.selected_columns.length : 0} columns</p>
-                <p><strong>Created:</strong> ${new Date(vv.created_at).toLocaleString()}</p>
+            vbvDiv.innerHTML = `
+                <h4>${vbv.name}</h4>
+                <p><strong>Description:</strong> ${vbv.description || 'No description'}</p>
+                <p><strong>Table:</strong> ${vbv.table_name}</p>
+                <p><strong>Columns:</strong> ${selectedColumns.length} columns selected</p>
+                <p><strong>Created:</strong> ${new Date(vbv.created_at).toLocaleString()}</p>
+                <p style="margin-top: 10px; font-style: italic; color: #666;">Click to view details</p>
             `;
 
-            this.virtualViewsList.appendChild(vvDiv);
+            vbvDiv.addEventListener('click', () => this.showVirtualBaseViewDetails(vbv));
+            this.virtualViewsList.appendChild(vbvDiv);
         });
+    }
+
+    async showVirtualBaseViewDetails(virtualBaseView) {
+        try {
+            const token = getAuthToken();
+            if (!token) {
+                alert('Error: Please log in first.');
+                return;
+            }
+
+            // Load schema
+            const schemaResponse = await fetch(`/api/virtual-base-views/schema?virtual_base_view_id=${virtualBaseView.id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!schemaResponse.ok) {
+                const error = await schemaResponse.json();
+                alert(`Error loading schema: ${error.message || schemaResponse.statusText}`);
+                return;
+            }
+
+            const schemaResult = await schemaResponse.json();
+            this.displayVirtualBaseViewModal(virtualBaseView, schemaResult.schema);
+
+        } catch (error) {
+            alert(`Error loading Virtual BaseView details: ${error.message}`);
+        }
+    }
+
+    displayVirtualBaseViewModal(virtualBaseView, schema) {
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.5); display: flex; 
+            justify-content: center; align-items: center; z-index: 1000;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background: white; padding: 20px; border-radius: 8px; 
+            max-width: 90%; max-height: 90%; overflow-y: auto;
+            min-width: 600px;
+        `;
+
+        const selectedColumns = virtualBaseView.selected_columns ? JSON.parse(virtualBaseView.selected_columns) : [];
+
+        modalContent.innerHTML = `
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">${virtualBaseView.name}</h3>
+                <button id="closeModal" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-left: 20px;">Close</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <p><strong>Description:</strong> ${virtualBaseView.description || 'No description'}</p>
+                <p><strong>Table:</strong> ${virtualBaseView.table_name}</p>
+                <p><strong>Columns:</strong> ${selectedColumns.length} selected</p>
+                <p><strong>Created:</strong> ${new Date(virtualBaseView.created_at).toLocaleString()}</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <button id="viewSchemaBtn" class="btn btn-primary" style="margin-right: 10px;">View Schema</button>
+                <button id="viewSampleDataBtn" class="btn btn-secondary">View Sample Data</button>
+            </div>
+
+            <div id="modalContentArea"></div>
+        `;
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Event listeners
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+
+        document.getElementById('viewSchemaBtn').addEventListener('click', () => {
+            this.displaySchemaInModal(schema);
+        });
+
+        document.getElementById('viewSampleDataBtn').addEventListener('click', () => {
+            this.loadSampleDataInModal(virtualBaseView.id);
+        });
+
+        // Auto-load schema
+        this.displaySchemaInModal(schema);
+    }
+
+    displaySchemaInModal(schema) {
+        const contentArea = document.getElementById('modalContentArea');
+        
+        if (!schema || schema.length === 0) {
+            contentArea.innerHTML = '<p>No schema information available.</p>';
+            return;
+        }
+
+        let tableHTML = `
+            <h4>Schema Details</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Column Name</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Type</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Primary Key</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Allow Null</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        schema.forEach(column => {
+            const isPrimaryKey = column.is_primary_key;
+            const allowsNull = column.is_nullable;
+            
+            tableHTML += `
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${column.column_name}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${column.column_type}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                        <span style="color: ${isPrimaryKey ? 'green' : 'red'};">${isPrimaryKey ? '✓' : '✗'}</span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                        <span style="color: ${allowsNull ? 'green' : 'red'};">${allowsNull ? '✓' : '✗'}</span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table>';
+        contentArea.innerHTML = tableHTML;
+    }
+
+    async loadSampleDataInModal(virtualBaseViewId) {
+        const contentArea = document.getElementById('modalContentArea');
+        contentArea.innerHTML = '<p>Loading sample data...</p>';
+
+        try {
+            const token = getAuthToken();
+            const response = await fetch(`/api/virtual-base-views/sample-data?virtual_base_view_id=${virtualBaseViewId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.displaySampleDataInModal(result);
+            } else {
+                contentArea.innerHTML = `<p>Error loading sample data: ${result.message || response.statusText}</p>`;
+            }
+        } catch (error) {
+            contentArea.innerHTML = `<p>Error loading sample data: ${error.message}</p>`;
+        }
+    }
+
+    displaySampleDataInModal(data) {
+        const contentArea = document.getElementById('modalContentArea');
+        
+        if (!data || !data.columns || data.columns.length === 0) {
+            contentArea.innerHTML = '<p>No sample data available.</p>';
+            return;
+        }
+
+        let tableHTML = `
+            <h4>Sample Data (First 5 rows)</h4>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+        `;
+
+        // Add column headers
+        data.columns.forEach(columnName => {
+            tableHTML += `<th style="border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap;">${columnName}</th>`;
+        });
+
+        tableHTML += '</tr></thead><tbody>';
+
+        // Add data rows
+        if (data.rows && data.rows.length > 0) {
+            data.rows.forEach(row => {
+                tableHTML += '<tr>';
+                data.columns.forEach(columnName => {
+                    const cellValue = row[columnName];
+                    const displayValue = cellValue !== null && cellValue !== undefined ? String(cellValue) : '<em>NULL</em>';
+                    tableHTML += `<td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${displayValue}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+        } else {
+            tableHTML += `<tr><td colspan="${data.columns.length}" style="border: 1px solid #ddd; padding: 8px; text-align: center; font-style: italic;">No data available</td></tr>`;
+        }
+
+        tableHTML += '</tbody></table></div>';
+        contentArea.innerHTML = tableHTML;
     }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = VirtualViewManager;
-}
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const virtualViewManager = new VirtualViewManager();
+    virtualViewManager.init();
+});

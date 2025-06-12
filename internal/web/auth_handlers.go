@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"Bridgo/internal/auth"
@@ -75,12 +76,17 @@ func (h *HandlerDependencies) loginAPIHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Debug: Log the user information during login
+	log.Printf("User login successful - Username: %s, UserID: %s", user.Username, user.ID)
+
 	// Generate JWT token
 	tokenString, err := auth.GenerateJWT(user.Username, user.ID)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("JWT token generated for user: %s", user.Username)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

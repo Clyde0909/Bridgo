@@ -177,6 +177,20 @@ func (cs *ConnectionService) TestConnectionAndFetchSchema(input ConnectAndFetchS
 func (cs *ConnectionService) SaveDataSource(input ConnectAndFetchSchemaInput, schema []models.DataSourceSchema) (*models.DataSource, error) {
 	now := time.Now().UTC()
 
+	// Debug: Log the UserID being used
+	log.Printf("Attempting to save data source for UserID: %s", input.UserID)
+
+	// Verify user exists before proceeding
+	var existingUserID string
+	err := cs.metaDB.QueryRow("SELECT id FROM users WHERE id = ?", input.UserID).Scan(&existingUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user with ID %s does not exist", input.UserID)
+		}
+		return nil, fmt.Errorf("failed to verify user existence: %w", err)
+	}
+	log.Printf("User verified: %s", existingUserID)
+
 	// Begin transaction for metadata updates
 	tx, err := cs.metaDB.Begin()
 	if err != nil {

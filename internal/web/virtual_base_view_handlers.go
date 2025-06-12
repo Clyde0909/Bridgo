@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"Bridgo/internal/auth"
-	"Bridgo/internal/core"
+	"Bridgo/internal/models"
 )
 
-// getUserVirtualViewsAPIHandler retrieves all virtual views for a user
-func (h *HandlerDependencies) getUserVirtualViewsAPIHandler(w http.ResponseWriter, r *http.Request) {
+// getUserVirtualBaseViewsAPIHandler retrieves all virtual base views for a user
+func (h *HandlerDependencies) getUserVirtualBaseViewsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -31,27 +31,26 @@ func (h *HandlerDependencies) getUserVirtualViewsAPIHandler(w http.ResponseWrite
 		return
 	}
 
-	virtualViews, err := h.CoreService.GetUserVirtualViews(claims.UserID)
+	virtualBaseViews, err := h.CoreService.GetUserVirtualBaseViews(claims.UserID)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "Failed to retrieve virtual views: " + err.Error(),
+			"message": "Failed to retrieve virtual base views: " + err.Error(),
 		})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success":      true,
-		"virtualviews": virtualViews,
+		"success":            true,
+		"virtual_base_views": virtualBaseViews,
 	})
 }
 
-// createVirtualViewAPIHandler handles the creation of a new virtual view.
-// This handler will be protected by the JWTMiddleware.
-func (h *HandlerDependencies) createVirtualViewAPIHandler(w http.ResponseWriter, r *http.Request) {
+// createVirtualBaseViewAPIHandler handles the creation of a new virtual base view
+func (h *HandlerDependencies) createVirtualBaseViewAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -73,7 +72,7 @@ func (h *HandlerDependencies) createVirtualViewAPIHandler(w http.ResponseWriter,
 		return
 	}
 
-	var input core.CreateVirtualViewInput
+	var input models.CreateVirtualBaseViewInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -90,27 +89,45 @@ func (h *HandlerDependencies) createVirtualViewAPIHandler(w http.ResponseWriter,
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "Virtual view name is required",
+			"message": "Virtual base view name is required",
 		})
 		return
 	}
-	if len(input.SelectedSchemaIDs) == 0 {
+	if input.DataSourceID == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "At least one column must be selected for the virtual view",
+			"message": "Data source ID is required",
+		})
+		return
+	}
+	if input.TableName == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Table name is required",
+		})
+		return
+	}
+	if len(input.SelectedColumns) == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "At least one column must be selected for the virtual base view",
 		})
 		return
 	}
 
-	virtualView, err := h.CoreService.CreateVirtualView(input)
+	virtualBaseView, err := h.CoreService.CreateVirtualBaseView(input)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "Failed to create virtual view: " + err.Error(),
+			"message": "Failed to create virtual base view: " + err.Error(),
 		})
 		return
 	}
@@ -118,14 +135,14 @@ func (h *HandlerDependencies) createVirtualViewAPIHandler(w http.ResponseWriter,
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success":     true,
-		"message":     "Virtual view created successfully",
-		"virtualview": virtualView,
+		"success":           true,
+		"message":           "Virtual base view created successfully",
+		"virtual_base_view": virtualBaseView,
 	})
 }
 
-// getVirtualViewSchemaAPIHandler retrieves schema for a specific virtual view
-func (h *HandlerDependencies) getVirtualViewSchemaAPIHandler(w http.ResponseWriter, r *http.Request) {
+// getVirtualBaseViewSchemaAPIHandler retrieves schema for a specific virtual base view
+func (h *HandlerDependencies) getVirtualBaseViewSchemaAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -147,29 +164,29 @@ func (h *HandlerDependencies) getVirtualViewSchemaAPIHandler(w http.ResponseWrit
 		return
 	}
 
-	virtualViewID := r.URL.Query().Get("virtual_view_id")
-	if virtualViewID == "" {
+	virtualBaseViewID := r.URL.Query().Get("virtual_base_view_id")
+	if virtualBaseViewID == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "virtual_view_id parameter is required",
+			"message": "virtual_base_view_id parameter is required",
 		})
 		return
 	}
 
-	schema, err := h.CoreService.GetVirtualViewSchema(virtualViewID, claims.UserID)
+	schema, err := h.CoreService.GetVirtualBaseViewSchema(virtualBaseViewID, claims.UserID)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "Failed to retrieve virtual view schema: " + err.Error(),
+			"message": "Failed to retrieve virtual base view schema: " + err.Error(),
 		})
 		return
 	}
 
-	// Convert sql.NullBool to proper JSON format for frontend (same as datasource handler)
+	// Convert sql.NullBool to proper JSON format for frontend
 	var schemaResponses []SchemaResponse
 	for _, s := range schema {
 		schemaResponse := SchemaResponse{
@@ -193,8 +210,8 @@ func (h *HandlerDependencies) getVirtualViewSchemaAPIHandler(w http.ResponseWrit
 	})
 }
 
-// getVirtualViewSampleDataAPIHandler retrieves sample data for a specific virtual view
-func (h *HandlerDependencies) getVirtualViewSampleDataAPIHandler(w http.ResponseWriter, r *http.Request) {
+// getVirtualBaseViewSampleDataAPIHandler retrieves sample data for a specific virtual base view
+func (h *HandlerDependencies) getVirtualBaseViewSampleDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -216,24 +233,24 @@ func (h *HandlerDependencies) getVirtualViewSampleDataAPIHandler(w http.Response
 		return
 	}
 
-	virtualViewID := r.URL.Query().Get("virtual_view_id")
-	if virtualViewID == "" {
+	virtualBaseViewID := r.URL.Query().Get("virtual_base_view_id")
+	if virtualBaseViewID == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "virtual_view_id parameter is required",
+			"message": "virtual_base_view_id parameter is required",
 		})
 		return
 	}
 
-	sampleData, err := h.CoreService.GetVirtualViewSampleData(virtualViewID, claims.UserID)
+	sampleData, err := h.CoreService.GetVirtualBaseViewSampleData(virtualBaseViewID, claims.UserID)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "Failed to retrieve virtual view sample data: " + err.Error(),
+			"message": "Failed to retrieve virtual base view sample data: " + err.Error(),
 		})
 		return
 	}
